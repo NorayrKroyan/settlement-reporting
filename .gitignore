@@ -1,0 +1,10 @@
+/node_modules
+/vendor
+.env
+.env.*
+/storage/framework/*
+/bootstrap/cache/*
+/.idea
+.vscode
+.DS_Store
+npm-debug.log*
