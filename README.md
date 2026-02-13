@@ -1,130 +1,121 @@
-# SettlementV2 (Laravel + React) — no auth
+# Settlement Reporting & Inbound Load Processing System
 
-This repo is a **starter** for SettlementMakerV2-style weekly settlements.
+## Overview
 
-- **Backend:** Laravel API (no auth)
-- **Frontend:** React (Vite)
-- **DB:** Uses your existing `escrow_tracker` schema (import your SQL dump)
+This repository contains two integrated modules:
 
-> Note: This repo does **not** include `vendor/` or `node_modules/`.
-> You will install dependencies locally.
+1.  Statement Viewer / Generator
+2.  Inbound Load Matching (Queue)
 
----
+Built with Laravel and Vue 3, this system generates, stores, and exports
+settlement reports while managing unmatched inbound loads.
 
-## 1) Prereqs
+------------------------------------------------------------------------
 
-- PHP 8.2+
-- Composer
-- Node 18+ (or 20+)
-- MySQL/MariaDB
-- (Recommended) Git
+## Technology Stack
 
----
+Backend: - PHP 8.2+ - Laravel - DomPDF - MySQL / MariaDB
 
-## 2) Database
+Frontend: - Vue 3 - Vite - Axios
 
-Create DB and import your dump:
+------------------------------------------------------------------------
 
-```sql
-CREATE DATABASE escrow_tracker CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+## Project Structure
 
-Then import:
+repo/ - backend/ - frontend/ui-vue/ - README.md
 
-- `database/escrow_tracker.sql`
+------------------------------------------------------------------------
 
----
+## Statement Viewer / Generator
 
-## 3) Backend setup (Laravel)
+### Purpose
 
-### Windows (PowerShell)
+Creates financial settlement statements for clients and carriers.
 
-```powershell
-cd scripts
-./create-backend.ps1
-cd ../backend
-copy .env.example .env
-# edit .env DB_* values
-composer install
-php artisan key:generate
-php artisan serve
-```
+### Workflow
 
-### macOS/Linux (bash)
+1.  Select client, carrier, date range
+2.  System calculates totals
+3.  Settlement saved as new revision
+4.  PDF export available
 
-```bash
-cd scripts
-bash create-backend.sh
-cd ../backend
-cp .env.example .env
-# edit .env DB_* values
-composer install
-php artisan key:generate
-php artisan serve
-```
+### Key Rule
 
-Backend runs on: http://127.0.0.1:8000
+Each build creates a new database record (revision model).
 
-Health:
-- http://127.0.0.1:8000/api/health
+------------------------------------------------------------------------
 
----
+## Inbound Load Matching
 
-## 4) Frontend setup (React)
+### Purpose
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Processes and matches unmatched loads before settlement.
 
-Frontend runs on: http://127.0.0.1:5173
+### Workflow
 
-The frontend expects backend at:
-- `http://127.0.0.1:8000`
+1.  Retrieve queue
+2.  Match IDs
+3.  Process records
+4.  Finalize for settlements
 
-You can change it in:
-- `frontend/.env`
+------------------------------------------------------------------------
 
----
+## Database Requirements
 
-## 5) API endpoints (current MVP)
+Required tables: - fatloads - bill_settlements - bill_settlementloads -
+clients - carrier
 
-### Lookups
-- `GET /api/lookups/clients`
-- `GET /api/lookups/carriers?client_name=...`
+Optional: - bill_chargebacks - bill_settlementchargebacks
 
-> These are derived from distinct `fatloads.client_name` and `fatloads.carrier_name`
+------------------------------------------------------------------------
 
-### Settlement
-- `POST /api/settlements/build`
-- `GET /api/settlements/{id}`
+## API Endpoints
 
-Build payload example:
+Statement: - GET /api/health - POST /api/settlements/build - GET
+/api/settlements/{id} - GET /api/settlements/{id}/pdf - GET
+/api/settlements/history
 
-```json
-{
-  "client_name": "Henry Bros LLC",
-  "carrier_name": "K & B Trucking LLC",
-  "start_date": "2026-01-01",
-  "end_date": "2026-03-31",
-  "factor_percent": 2.5
-}
-```
+Inbound: - GET /api/inbound-loads/queue - POST
+/api/inbound-loads/process
 
----
+------------------------------------------------------------------------
 
-## 6) Important schema notes (kept as-is)
+## Local Setup
 
-Your schema has `bill_settlements.clientid`/`carrierid` integers, but there is no `clients` table in the dump.
-This MVP stores **client/carrier as strings** in `bill_settlements.desc` and leaves `clientid`/`carrierid` NULL.
+Backend:
 
-Later we can normalize by creating/using `clients` + fixing FK types.
+cd backend composer install php artisan serve
 
----
+Frontend:
 
-## 7) Next steps
-- Add chargebacks attach/detach
-- Add PDF generation
-- Add caching/indexes
-- Normalize clients/carriers mapping
+cd frontend/ui-vue npm install npm run dev
+
+------------------------------------------------------------------------
+
+## Production
+
+Backend:
+
+composer install --no-dev php artisan migrate --force
+
+Frontend:
+
+npm run build
+
+------------------------------------------------------------------------
+
+## Security
+
+No built-in authentication. Must be handled by parent system.
+
+------------------------------------------------------------------------
+
+## Performance
+
+Recommended DB indexes on fatloads and bill_chargebacks.
+
+------------------------------------------------------------------------
+
+## Status
+
+Production ready. Requires external authentication.
