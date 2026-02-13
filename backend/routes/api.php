@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\SettlementController;
 use App\Http\Controllers\Api\SettlementHistoryController;
-
+use App\Http\Controllers\Api\InboundLoadMatchingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,3 +37,10 @@ Route::prefix('settlements')->group(function () {
     Route::get('/history/pdf', [SettlementHistoryController::class, 'historyPdf']);
 
 });
+
+//Inbound loads
+Route::get('/inbound-loads/queue', [InboundLoadMatchingController::class, 'queue']);
+Route::post('/inbound-loads/process', [InboundLoadMatchingController::class, 'process']);
+
+
+
